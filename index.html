@@ -256,6 +256,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;mix-blend-mode:difference}
   .dash-grid{grid-template-columns:1fr;min-height:auto}
   .ticker{grid-template-columns:1fr;gap:12px;text-align:left}
 }
+@media(max-width:680px){
+  /* tabs were overflowing off-screen (2nd tab clipped, unreachable) — stack them */
+  .dash{padding:88px 20px}
+  .dash-tabs{flex-direction:column;gap:8px}
+  .dash-tab{flex:1 1 auto;width:100%}
+  .dash-bar .url{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+  .dash-lab{padding:18px 16px;min-height:auto}
+  .dash-lab-list{max-height:none}
+  .dash-col{padding:18px 16px}
+  .dash-lab-head{align-items:flex-start}
+  .dash-lab-filters{flex-wrap:wrap}
+}
 
 /* --- HERO --- */
 .hero{padding:160px 28px 60px;max-width:var(--max);margin:0 auto;position:relative}
@@ -316,6 +328,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;mix-blend-mode:difference}
 .faq-head{display:grid;grid-template-columns:1fr 1.1fr;gap:64px;margin-bottom:56px;align-items:end}
 .faq h2{font-family:var(--serif);font-size:clamp(40px,5vw,72px);line-height:.95;letter-spacing:-.02em;font-weight:400}
 .faq h2 em{font-style:italic;color:var(--accent)}
+.faq h2 .faq-rotor{display:inline-block;font-style:italic;color:var(--accent);transition:opacity .25s ease, transform .25s ease;will-change:opacity,transform}
 .faq-intro{font-size:16px;color:var(--ink-soft);line-height:1.55;max-width:460px}
 .faq-list{border-top:1px solid var(--line)}
 .faq-item{border-bottom:1px solid var(--line)}
@@ -2020,7 +2033,7 @@ h2 em.rv-em.vis{clip-path:inset(0 0 0 0)}
     <div class="faq-head fi">
       <div>
         <div class="eyebrow" data-en="Frequently asked">Preguntas frecuentes</div>
-        <h2 data-en="What your <em>committee</em> will ask.">Lo que pregunta<br>tu <em>comité.</em></h2>
+        <h2><span data-en="What your ">Lo que pregunta<br>tu </span><span class="faq-rotor" id="faqRotor">institución</span><span data-en=" asks.">.</span></h2>
       </div>
       <p class="faq-intro" data-en="The same 6 questions come up in every hospital and HMO conversation. Here are the short, honest answers — without sales-pitch fluff.">Las mismas 6 preguntas aparecen en cada conversación con hospitales y mutualistas. Acá las respuestas cortas y honestas — sin pitch comercial.</p>
     </div>
@@ -2502,8 +2515,13 @@ const I18N = (() => {
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{
       const t = e.target;
-      if(e.isIntersecting){
-        // Clear any transition override left from a previous exit, then animate in.
+      // TWO-WAY reveal with a hysteresis dead-zone that kills the flicker:
+      //   • reveal only once the element is ≥12% in view
+      //   • reset to hidden ONLY when it is fully out of view (ratio 0)
+      // The show/hide trigger points are far apart, so the observer can never
+      // rapidly toggle around a single boundary → no strobing.
+      if(e.isIntersecting && e.intersectionRatio >= 0.12){
+        // Clear any transition override, then animate in.
         t.style.transition = '';
         t.classList.add('vis');
         if(t.tagName === 'H2' && t.dataset.hasEm){
@@ -2518,24 +2536,24 @@ const I18N = (() => {
             }
           }
         }
-      } else {
-        // Element left the viewport — snap it back to hidden state with NO transition,
-        // so the next entry plays the full reveal again.
+      } else if(!e.isIntersecting){
+        // Fully off-screen — snap back to hidden with NO transition (invisible to
+        // the user) so the entry animation plays in full next time it scrolls in.
         t.style.transition = 'none';
         t.classList.remove('vis');
         if(t.tagName === 'H2' && t.dataset.hasEm){
           t.querySelectorAll('em.rv-em').forEach(em=>{ em.style.transition = 'none'; em.classList.remove('vis'); });
         }
-        // Force a reflow so the transition:'none' takes effect before we restore it
-        // for the next entry.
+        // Force a reflow so transition:'none' applies before we restore it.
         void t.offsetWidth;
         t.style.transition = '';
         if(t.tagName === 'H2' && t.dataset.hasEm){
           t.querySelectorAll('em.rv-em').forEach(em=>{ em.style.transition = ''; });
         }
       }
+      // Partially visible (0 < ratio < 0.12): do nothing — this is the dead-zone.
     });
-  },{threshold:0.12, rootMargin:'0px 0px -4% 0px'});
+  },{threshold:[0, 0.12], rootMargin:'0px 0px -4% 0px'});
 
   // observe everything that should reveal
   const sel = '.fi,[data-reveal],[data-stagger],h2,.stat-card,.roi-out-num,.dlh-stat-val';
@@ -3017,8 +3035,30 @@ const I18N = (() => {
 })();
 
 /* ============================================= */
-/* CONTEXT — interactive costs/evidence by product */
+/* FAQ ROTOR — institución / seguro / hospital… */
 /* ============================================= */
+(()=>{
+  const el = document.getElementById('faqRotor');
+  if(!el) return;
+  const wordsByLang = {
+    es: ['institución','seguro','hospital','mutualista'],
+    en: ['institution','insurer','hospital','HMO']
+  };
+  let i = 0;
+  const getWords = ()=> wordsByLang[I18N.get()] || wordsByLang.es;
+  el.textContent = getWords()[0];
+  document.addEventListener('langchange', ()=>{ el.textContent = getWords()[i]; });
+  setInterval(()=>{
+    i = (i+1) % getWords().length;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(()=>{
+      el.textContent = getWords()[i];
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 260);
+  }, 2600);
+})();
 
 /* Source → article URL map. Each cited datum's source text below maps to
  * the closest authoritative landing page for that piece of research. */
@@ -3303,7 +3343,10 @@ function linkify(s){
 
   function render(){
     const items = [];
-    for(let i=0;i<24;i++){
+    // Keep the rendered row under the mobile GPU texture limit (~16k px): a single
+    // copy of 12 items (~4.4k px) already overfills any viewport, so the duplicated
+    // track stays seamless while remaining paintable on phones.
+    for(let i=0;i<12;i++){
       const r = Math.random();
       items.push(make(r<.08?'alert': r<.18?'amber':'norm'));
     }
