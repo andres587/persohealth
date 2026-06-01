@@ -1757,11 +1757,6 @@ h2 em.rv-em.vis{clip-path:inset(0 0 0 0)}
             <div class="roi-out-num" id="roiLab">0</div>
             <div class="roi-out-sub" data-en="USD/year: critical values + staff freed">USD/año: valores críticos + dotación liberada</div>
           </div>
-          <div class="roi-out-cell" style="grid-column:1 / -1;background:var(--ink);color:var(--bg)">
-            <div class="roi-out-lbl" style="color:rgba(255,255,255,.45)" data-en="Total year-1 savings — selected products">Ahorro total año 1 — productos seleccionados</div>
-            <div class="roi-out-num big" style="color:var(--accent-bright)">USD <span id="roiTotal">0</span></div>
-            <div class="roi-out-sub" style="color:rgba(255,255,255,.5)" data-en="Net of Perso licensing. Add or remove products above.">Neto de licenciamiento Perso. Sumá o quitá productos arriba.</div>
-          </div>
         </div>
 
         <div class="roi-sources">
@@ -3388,9 +3383,10 @@ function linkify(s){
   const totEl = document.getElementById('roiTotal');
 
   // segment-specific cost / license assumptions (USD, LATAM-calibrated)
+  // costs reduced 15% across the board
   const segs = {
-    hospital: { license: 6, costVisit: 25, costAdmit: 2400, costED: 180 },
-    seguro:   { license: 5, costVisit: 22, costAdmit: 2000, costED: 160 }
+    hospital: { license: 5.1, costVisit: 21.25, costAdmit: 2040, costED: 153 },
+    seguro:   { license: 4.25, costVisit: 18.7, costAdmit: 1700, costED: 136 }
   };
   let active = 'hospital';
   const enabled = { prescription:true, attendance:true, consult:true, lab:true };
@@ -3427,15 +3423,16 @@ function linkify(s){
     // doctors about critical values & pathology (24/7 rotating shifts). USD 30k/FTE loaded;
     // FTE freed scales with provider size, mid-size hospital ≈ 1–2 FTE = USD 30–60k/yr.
     const fteFreed = Math.min(5, Math.max(0.5, N / 18000));
-    const labLaborSav = enabled.lab ? fteFreed * 30000 : 0;
+    const labLaborSav = enabled.lab ? fteFreed * 25500 : 0;
     const labSav = labAdmitSav + labLaborSav;
 
     // License cost only on enabled products
     const enabledCount = Object.values(enabled).filter(Boolean).length;
     const license = N * s.license * (enabledCount / 4);
 
+    // total = sum of the selected products' savings
     const gross = rxSav + atSav + coSav + labSav;
-    const net   = Math.max(0, gross - license);
+    const net   = gross;
 
     pVal.textContent = fmt(N);
     vVal.textContent = fmt(V);
@@ -3443,7 +3440,7 @@ function linkify(s){
     out.attendance.textContent   = fmt(atSav);
     out.consult.textContent      = fmt(coSav);
     out.lab.textContent          = fmt(labSav);
-    totEl.textContent            = fmt(net);
+    if(totEl) totEl.textContent  = fmt(net);
 
     Object.keys(enabled).forEach(k=>{
       const c = cells[k];
@@ -3461,12 +3458,11 @@ function linkify(s){
     calc();
   });
   document.querySelectorAll('.roi-prod').forEach(el=>{
-    el.addEventListener('click', e=>{
-      e.preventDefault();
-      const k = el.dataset.prod;
-      enabled[k] = !enabled[k];
-      el.classList.toggle('on', enabled[k]);
-      el.querySelector('input').checked = enabled[k];
+    const cb = el.querySelector('input');
+    const k  = el.dataset.prod;
+    cb.addEventListener('change', ()=>{
+      enabled[k] = cb.checked;
+      el.classList.toggle('on', cb.checked);
       calc();
     });
   });
@@ -3839,13 +3835,125 @@ function linkify(s){
 
 /* contact form removed — now a direct WhatsApp CTA */
 
-/* mobile menu */
-document.querySelector('.nav-ham')?.addEventListener('click', ()=>{
-  document.querySelector('.nav-links').classList.toggle('show');
-});
-const ms = document.createElement('style');
-ms.textContent = '@media(max-width:680px){.nav-links.show{display:flex!important;flex-direction:column;position:absolute;top:60px;left:0;right:0;background:rgba(10,10,10,.95);padding:16px 24px;gap:16px;backdrop-filter:blur(20px);color:#fff}.nav-links.show a{color:#fff!important;font-size:15px}}';
-document.head.appendChild(ms);
+/* mobile menu — full-screen overlay rendered OUTSIDE the nav's
+   mix-blend-mode:difference context so its background stays solid */
+(function(){
+  const ham = document.querySelector('.nav-ham');
+  if(!ham) return;
+
+  // styles for the overlay + animated hamburger
+  const ms = document.createElement('style');
+  ms.textContent = `
+    .mnav{position:fixed;inset:0;z-index:200;background:var(--ink);
+      display:flex;flex-direction:column;justify-content:center;
+      padding:96px 32px 48px;opacity:0;visibility:hidden;
+      transform:translateY(-8px);
+      transition:opacity .38s cubic-bezier(.22,.61,.36,1),
+                 transform .42s cubic-bezier(.22,.61,.36,1),
+                 visibility .38s;}
+    .mnav.open{opacity:1;visibility:visible;transform:translateY(0)}
+    .mnav::before{content:"";position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(120% 80% at 100% 0%,rgba(107,196,187,.16),transparent 60%);}
+    .mnav-head{position:absolute;top:0;left:0;right:0;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:22px 28px;color:var(--bg)}
+    .mnav-logo{display:flex;align-items:center;gap:10px}
+    .mnav-logo .m{width:18px;height:18px;border-radius:50%;background:var(--bg);position:relative}
+    .mnav-logo .m::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--ink)}
+    .mnav-logo span{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--bg)}
+    .mnav-close{background:none;border:1px solid rgba(245,243,238,.3);border-radius:100px;
+      color:var(--bg);width:38px;height:38px;display:grid;place-items:center;cursor:pointer;
+      font-size:18px;line-height:1;transition:border-color .2s,background .2s}
+    .mnav-close:hover{border-color:var(--bg);background:rgba(245,243,238,.08)}
+    .mnav-links{list-style:none;display:flex;flex-direction:column;gap:6px}
+    .mnav-links li{overflow:hidden}
+    .mnav-links a{display:block;font-family:var(--serif);font-style:italic;
+      font-size:clamp(34px,11vw,48px);line-height:1.18;letter-spacing:-.01em;
+      color:var(--bg);text-decoration:none;padding:4px 0;
+      opacity:0;transform:translateY(110%);
+      transition:opacity .5s ease,transform .55s cubic-bezier(.22,.61,.36,1),color .2s}
+    .mnav.open .mnav-links a{opacity:1;transform:translateY(0)}
+    .mnav-links a:active{color:var(--accent-bright)}
+    .mnav-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding-top:32px;border-top:1px solid rgba(245,243,238,.12);
+      opacity:0;transition:opacity .5s ease .25s}
+    .mnav.open .mnav-foot{opacity:1}
+    .mnav-foot .cta{font-family:var(--sans);font-size:14px;font-weight:500;
+      color:var(--ink);background:var(--bg);text-decoration:none;
+      padding:12px 22px;border-radius:100px}
+    .mnav-lang{display:flex;gap:4px;border:1px solid rgba(245,243,238,.3);border-radius:100px;padding:4px}
+    .mnav-lang button{background:none;border:none;color:rgba(245,243,238,.55);cursor:pointer;
+      font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:6px 11px;border-radius:100px;transition:.2s}
+    .mnav-lang button.active{background:var(--bg);color:var(--ink)}
+    body.mnav-lock{overflow:hidden}
+    /* animate hamburger into an X */
+    .nav-ham.is-open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+    .nav-ham.is-open span:nth-child(2){opacity:0}
+    .nav-ham.is-open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+    .nav-ham span{transition:transform .3s ease,opacity .2s ease}
+    @media(min-width:681px){.mnav{display:none}}
+  `;
+  document.head.appendChild(ms);
+
+  // build links from the existing desktop nav
+  const items = [...document.querySelectorAll('.nav-links > li > a:not(.nav-cta)')];
+  const cta   = document.querySelector('.nav-links .nav-cta');
+
+  const ov = document.createElement('div');
+  ov.className = 'mnav';
+  ov.innerHTML = `
+    <div class="mnav-head">
+      <div class="mnav-logo"><span class="m"></span><span>perso</span></div>
+      <button class="mnav-close" aria-label="Cerrar menú">✕</button>
+    </div>
+    <ul class="mnav-links">
+      ${items.map(a=>`<li><a href="${a.getAttribute('href')}"${a.dataset.en?` data-en="${a.dataset.en}"`:''}>${a.textContent.trim()}</a></li>`).join('')}
+    </ul>
+    <div class="mnav-foot">
+      ${cta?`<a class="cta" href="${cta.getAttribute('href')}"${cta.dataset.en?` data-en="${cta.dataset.en}"`:''}>${cta.textContent.trim()}</a>`:'<span></span>'}
+      <div class="mnav-lang">
+        <button data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const closeBtn = ov.querySelector('.mnav-close');
+  const stagger  = ov.querySelectorAll('.mnav-links a');
+
+  function syncLang(){
+    const en = document.documentElement.classList.contains('lang-en') ||
+               document.body.classList.contains('lang-en') ||
+               document.documentElement.getAttribute('lang')==='en';
+    ov.querySelectorAll('.mnav-lang button').forEach(b=>
+      b.classList.toggle('active', b.dataset.lang===(en?'en':'es')));
+  }
+  function open(){
+    ov.classList.add('open');
+    ham.classList.add('is-open');
+    document.body.classList.add('mnav-lock');
+    stagger.forEach((a,i)=>a.style.transitionDelay=(0.12+i*0.06)+'s');
+    syncLang();
+  }
+  function close(){
+    ov.classList.remove('open');
+    ham.classList.remove('is-open');
+    document.body.classList.remove('mnav-lock');
+    stagger.forEach(a=>a.style.transitionDelay='0s');
+  }
+
+  ham.addEventListener('click', ()=> ov.classList.contains('open') ? close() : open());
+  closeBtn.addEventListener('click', close);
+  ov.querySelectorAll('.mnav-links a').forEach(a=>a.addEventListener('click', close));
+  ov.querySelectorAll('.mnav-foot .cta').forEach(a=>a.addEventListener('click', close));
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+
+  // wire the in-menu language buttons to the real toggle
+  ov.querySelectorAll('.mnav-lang button').forEach(b=>b.addEventListener('click', ()=>{
+    document.getElementById('langToggle')?.click();
+    setTimeout(syncLang, 30);
+  }));
+})();
 </script>
 
 <script>
