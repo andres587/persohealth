@@ -112,6 +112,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;mix-blend-mode:difference}
 .roi-sources-list b{color:var(--ink);font-weight:600}
 .roi-sources-list sup{font-family:var(--mono);font-size:9px;color:var(--accent);margin-left:1px}
 .roi-sources-foot{margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--ink-mute);line-height:1.6;letter-spacing:.02em;border-top:1px dashed var(--line);padding-top:12px}
+.roi-disclaimer{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border:1px solid color-mix(in oklab,var(--accent) 32%,transparent);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:11.5px;line-height:1.5;color:var(--accent-dark)}
+.roi-disclaimer-mark{font-family:var(--mono);font-size:9px;letter-spacing:.08em;font-weight:700;flex-shrink:0;margin-top:2px}
 
 /* --- LIVE DASHBOARD --- */
 .dash{padding:140px 28px;max-width:var(--max);margin:0 auto}
@@ -1753,7 +1755,7 @@ h2 em.rv-em.vis{clip-path:inset(0 0 0 0)}
           <div class="roi-out-cell" id="roiCellLab">
             <div class="roi-out-lbl" data-en="Lab · savings">Lab · ahorro</div>
             <div class="roi-out-num" id="roiLab">0</div>
-            <div class="roi-out-sub" data-en="USD/year from critical values on time">USD/año por valores críticos a tiempo</div>
+            <div class="roi-out-sub" data-en="USD/year: critical values + staff freed">USD/año: valores críticos + dotación liberada</div>
           </div>
           <div class="roi-out-cell" style="grid-column:1 / -1;background:var(--ink);color:var(--bg)">
             <div class="roi-out-lbl" style="color:rgba(255,255,255,.45)" data-en="Total year-1 savings — selected products">Ahorro total año 1 — productos seleccionados</div>
@@ -1763,6 +1765,10 @@ h2 em.rv-em.vis{clip-path:inset(0 0 0 0)}
         </div>
 
         <div class="roi-sources">
+          <div class="roi-disclaimer">
+            <span class="roi-disclaimer-mark" data-en="≈ NOTE">≈ NOTA</span>
+            <span data-en="Indicative figures, not a quote. They are estimates based on an international clinical database and the sources cited below, parameterized with average costs for Uruguay and South America. Real results vary by institution.">Cifras sugestivas, no una cotización. Son estimaciones basadas en una base de datos clínica internacional y las fuentes citadas aquí abajo, parametrizadas con costos medios de Uruguay y Sudamérica. Los resultados reales varían según cada institución.</span>
+          </div>
           <div class="roi-sources-h" data-en="Sources">Fuentes</div>
           <ol class="roi-sources-list">
             <li data-en="<b>Prescription</b> — Machado-Duque et al. (Cad. Saúde Pública, 2020): WhatsApp + education raised adherence 15 pp in HTN and DM2 in LATAM.<sup>1</sup> AHA/JAHA 2024: optimizing adherence prevents 34–63 CV events per 1,000 patients (Mexico, Thailand, China).<sup>2</sup>"><b>Prescription</b> — Machado-Duque et al. (Cad. Saúde Pública, 2020): WhatsApp + educación aumentó adherencia 15 pp en HTA y DM2 en LATAM.<sup>1</sup> AHA/JAHA 2024: optimizar adherencia previene 34–63 eventos CV /1000 pacientes (México, Tailandia, China).<sup>2</sup></li>
@@ -1957,21 +1963,21 @@ h2 em.rv-em.vis{clip-path:inset(0 0 0 0)}
         <div class="cstm-idea">
           <div class="cstm-idea-head">
             <span class="cstm-idea-num">02</span>
-            <span class="cstm-idea-tag" data-en="Blockchain · Consent">Blockchain · Consentimiento</span>
+            <span class="cstm-idea-tag" data-en="Digital · Consent">Digital · Consentimiento</span>
           </div>
-          <div class="cstm-idea-nm" data-en="Patient consent and trials, <em>tamper-proof.</em>">Consentimiento y ensayos, <em>a prueba de manipulación.</em></div>
-          <div class="cstm-idea-desc" data-en="Informed consent, trial enrollment and access logs anchored on a permissioned blockchain. Every read/write of the clinical record signed and auditable in seconds — not weeks.">Consentimiento informado, enrolamiento en ensayos y accesos a la HCE anclados en blockchain privada. Cada lectura/escritura firmada y auditable en segundos — no en semanas.</div>
-          <div class="cstm-idea-ref" data-en="Inspired by MIT MedRec · EU EHDS framework · HL7 FHIR provenance">Inspirado en MIT MedRec · marco EHDS UE · HL7 FHIR provenance</div>
+          <div class="cstm-idea-nm" data-en="Surgical consent, <em>100% digital.</em>">Consentimiento quirúrgico, <em>100% digital.</em></div>
+          <div class="cstm-idea-desc" data-en="Fully digital informed consent: it captures every field required by each surgical procedure and builds a smart checklist adapted to the patient and their conditions — allergies, anticoagulation, comorbidities. Signed on a tablet, paperless, complete and auditable before entering the OR.">Consentimiento informado totalmente digital: captura todos los datos exigidos según el procedimiento quirúrgico y arma un checklist inteligente adaptado al paciente y sus patologías — alergias, anticoagulación, comorbilidades. Firma en tablet, sin papel, completo y auditable antes de entrar a sala.</div>
+          <div class="cstm-idea-ref" data-en="Inspired by WHO Surgical Safety Checklist · HL7 FHIR Consent · advanced e-signature">Inspirado en checklist quirúrgico OMS · HL7 FHIR Consent · firma electrónica avanzada</div>
         </div>
 
         <div class="cstm-idea">
           <div class="cstm-idea-head">
             <span class="cstm-idea-num">03</span>
-            <span class="cstm-idea-tag" data-en="Early warning">Alerta temprana</span>
+            <span class="cstm-idea-tag" data-en="Efficiency · OR">Eficiencia · Block</span>
           </div>
-          <div class="cstm-idea-nm" data-en="Sepsis warning, <em>before the code blue.</em>">Aviso de sepsis, <em>antes del código azul.</em></div>
-          <div class="cstm-idea-desc" data-en="Continuous vitals + lab values feed an ML model that pages the on-call resident 4–6h before clinical deterioration. Trials show 18% drop in in-hospital sepsis mortality.">Signos vitales continuos + datos de laboratorio alimentan un modelo que avisa al residente de guardia 4–6h antes del deterioro. Ensayos publicados muestran caída del 18% en mortalidad intrahospitalaria por sepsis.</div>
-          <div class="cstm-idea-ref" data-en="Inspired by Epic Deterioration Index · NEJM AI 2024 · TREWS Johns Hopkins">Inspirado en Epic Deterioration Index · NEJM AI 2024 · TREWS Johns Hopkins</div>
+          <div class="cstm-idea-nm" data-en="An OR suite that <em>wastes no time.</em>">Block quirúrgico que <em>no pierde tiempo.</em></div>
+          <div class="cstm-idea-desc" data-en="Per-room supply economato and predictive restocking, real-time coordination of cleaning and turnover between surgeries, and instrument-tray traceability. Less idle time between procedures and more cases per OR per day.">Economato y reposición predictiva de insumos por sala, coordinación en tiempo real de la limpieza y rotación entre cirugías, y trazabilidad de las cajas de instrumental. Menos tiempos muertos entre procedimientos y más cirugías por sala por jornada.</div>
+          <div class="cstm-idea-ref" data-en="Inspired by lean OR turnover · WHO surgical suite management · RFID instrument tracking">Inspirado en lean OR turnover · gestión de block quirúrgico OMS · trazabilidad RFID de instrumental</div>
         </div>
 
       </div>
@@ -3283,7 +3289,7 @@ function linkify(s){
       { who:'Pacientes', h:'Recordatorios fáciles', li:['Confirmación 48 y 24 horas antes','Reagenda directa por WhatsApp','Sin llamadas perdidas','Cancelación sin penalidades si se hace a tiempo'] }
     ],
     lab: [
-      { who:'Hospitales y clínicas', h:'Lo urgente, primero', li:['Estudios pre-clasificados por gravedad','Contacto automático en valores críticos','Próximos estudios de seguimiento agendados','Menos errores por listas planas'] },
+      { who:'Hospitales y clínicas', h:'Lo urgente, primero', li:['Ahorra 1–2 técnicos full-time (USD 30–60k/año) dedicados a llamar médicos','Estudios pre-clasificados por gravedad','Contacto automático en valores críticos','Próximos estudios de seguimiento agendados','Menos errores por listas planas'] },
       { who:'Seguros y mutualistas', h:'Detección temprana, menos costo', li:['Reducción de reingresos evitables','Costos asociados a valores críticos visibles','Datos de seguimiento por afiliado','Diferenciación clínica del prestador'] },
       { who:'Médicos', h:'Panel priorizado por gravedad', li:['Semáforo: rojo, amarillo, verde','Vista única de TODOS los labs evaluados','Filtrado por paciente o por gravedad','Contacto al paciente sin esperar consulta'] },
       { who:'Pacientes', h:'No se pierde el seguimiento', li:['Aviso si un valor sale crítico','Cita automática cuando hace falta','Recordatorio del próximo estudio','Resultados en lenguaje claro'] }
@@ -3416,7 +3422,13 @@ function linkify(s){
     // Lab: 1.5% of patients have critical values; faster routing avoids 8% of would-be admissions
     const critRate = 0.015;
     const admitAvoid = 0.08;
-    const labSav = enabled.lab ? N * critRate * admitAvoid * s.costAdmit * 4 : 0;
+    const labAdmitSav = enabled.lab ? N * critRate * admitAvoid * s.costAdmit * 4 : 0;
+    // Lab — labor: Perso replaces the 1–2 full-time techs dedicated solely to phoning
+    // doctors about critical values & pathology (24/7 rotating shifts). USD 30k/FTE loaded;
+    // FTE freed scales with provider size, mid-size hospital ≈ 1–2 FTE = USD 30–60k/yr.
+    const fteFreed = Math.min(5, Math.max(0.5, N / 18000));
+    const labLaborSav = enabled.lab ? fteFreed * 30000 : 0;
+    const labSav = labAdmitSav + labLaborSav;
 
     // License cost only on enabled products
     const enabledCount = Object.values(enabled).filter(Boolean).length;
